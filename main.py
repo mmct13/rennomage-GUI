@@ -124,6 +124,13 @@ fenetre = tk.Tk()
 fenetre.title("Renommer des fichiers")
 fenetre.geometry("600x400")
 
+
+# Maximisez la fenêtre
+# fenetre.attributes('-zoomed', True)
+
+# Cachez la barre de titre et les bordures de la fenêtre
+fenetre.attributes('-fullscreen', True)
+
 # Utilisez un thème moderne avec ttk
 style = ttk.Style()
 style.theme_use('clam')  # 'clam' est un thème moderne, vous pouvez choisir d'autres thèmes selon vos préférences
@@ -140,8 +147,11 @@ label_image = ttk.Label(fenetre, image=image_redimensionnee)
 label_image.pack(pady=10)
 
 # Créez un bouton pour lancer l'opération
-bouton_lancer = ttk.Button(fenetre, text="Lancer l'opération", command=renommer_fichiers)
+bouton_lancer = ttk.Button(fenetre, text="Lancer l'opération", width=20, command=renommer_fichiers)
 bouton_lancer.pack(pady=20)
+
+fermer_button = tk.Button(fenetre, bg='#FF6961', width=20, height=2, text="Fermer", command=fenetre.destroy)
+fermer_button.pack(pady=20)
 
 # Démarrez la boucle principale Tkinter
 fenetre.mainloop()
