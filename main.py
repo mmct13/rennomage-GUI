@@ -44,7 +44,7 @@ def renommer_fichiers():
             # Widget Text pour les logs de la console
             logs_text = tk.Text(fenetre, height=10, width=60)
             logs_text.pack(pady=10)
-            logs_text.insert(tk.END, "Logs de la console :\n\n")
+            logs_text.insert(tk.END, "Etats du renommage :\n\n")
 
             # Parcourez tous les fichiers dans le dossier d'images
             total_files = len([f for f in os.listdir(dossier_images) if os.path.isfile(os.path.join(dossier_images, f)) and f.lower().endswith(('.png', '.jpg', '.jpeg'))])
@@ -152,6 +152,10 @@ bouton_lancer.pack(pady=20)
 
 fermer_button = tk.Button(fenetre, bg='#FF6961', width=20, height=2, text="Fermer", command=fenetre.destroy)
 fermer_button.pack(pady=20)
+def reduire_fenetre():
+    fenetre.iconify()
 
+reduire_button = tk.Button(fenetre, bg='#CEC', width=20, height=2, text="Réduire", command=reduire_fenetre)
+reduire_button.pack(pady=20)
 # Démarrez la boucle principale Tkinter
 fenetre.mainloop()
