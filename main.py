@@ -5,17 +5,16 @@ from tkinter import ttk, filedialog, messagebox, simpledialog
 from PIL import Image, ImageTk
 
 def redimensionner_image(image_path, nouvelle_taille):
+    # Fonction pour redimensionner une image
     img = Image.open(image_path)
     img_redimensionnee = img.resize(nouvelle_taille)
     return ImageTk.PhotoImage(img_redimensionnee)
 
 def renommer_fichiers():
-    # ... (Votre fonction renommer_fichiers reste inchangée)
-
-    # Fonction pour renommer les fichiers
+    # Fonction pour renommer les fichiers dans un dossier en utilisant un fichier Excel
 
     # Obtenez le chemin du dossier d'images
-    dossier_images = filedialog.askdirectory(title="Sélectionnez le dossier d'images")
+    dossier_images = filedialog.askdirectory(title="Sélectionnez le dossier de fichiers à renommer : ")
 
     if not dossier_images:
         # L'utilisateur a annulé la sélection du dossier
@@ -47,7 +46,7 @@ def renommer_fichiers():
             logs_text.insert(tk.END, "Etats du renommage :\n\n")
 
             # Parcourez tous les fichiers dans le dossier d'images
-            total_files = len([f for f in os.listdir(dossier_images) if os.path.isfile(os.path.join(dossier_images, f)) and f.lower().endswith(('.png', '.jpg', '.jpeg'))])
+            total_files = len([f for f in os.listdir(dossier_images) if os.path.isfile(os.path.join(dossier_images, f))])
             progress_bar["maximum"] = total_files
 
             for i, fichier_image in enumerate(os.listdir(dossier_images)):
@@ -57,53 +56,64 @@ def renommer_fichiers():
                 progress_bar["value"] = i + 1
                 fenetre.update_idletasks()
 
-                # Vérifiez si le fichier est un fichier image
-                if os.path.isfile(chemin_image) and fichier_image.lower().endswith(('.png', '.jpg', '.jpeg')):
-                    # Obtenez le nom de fichier sans extension et l'extension
-                    nom_fichier_sans_extension, extension = os.path.splitext(fichier_image)
+                # Obtenez le nom de fichier sans extension et l'extension
+                nom_fichier_sans_extension, extension = os.path.splitext(fichier_image)
 
-                    # Vérifiez si le fichier contient un tiret
-                    if '-' in nom_fichier_sans_extension:
-                        # Divisez le nom de fichier en deux parties (avant et après le tiret)
-                        avant_tiret, apres_tiret = nom_fichier_sans_extension.split('-', 1)
 
-                        # Recherchez le nom dans la colonne 'refFournisseur' du fichier Excel
-                        correspondance = df_excel[df_excel['refFournisseur'] == avant_tiret]
+                # Vérifiez si le fichier contient un tiret
+                if '-' in nom_fichier_sans_extension:
+                    # Divisez le nom de fichier en deux parties (avant et après le tiret)
+                    avant_tiret, apres_tiret = nom_fichier_sans_extension.split('-', 1)
 
-                        # Si une correspondance est trouvée, renommez le fichier avec la partie après le tiret et ajoutez les tirets
-                        if not correspondance.empty:
-                            nouvelle_valeur = correspondance.iloc[0]['refArticle']
-                            nouveau_nom = f"{nouvelle_valeur}-{apres_tiret}{extension}"  # Utilisez l'extension d'origine
+                    # Recherchez le nom dans la colonne 'refFournisseur' du fichier Excel
+                    correspondance = df_excel[df_excel['refFournisseur'] == avant_tiret]
+
+                    # Si une correspondance est trouvée, renommez le fichier avec la partie après le tiret et ajoutez les tirets
+                    if not correspondance.empty:
+                        nouvelle_valeur = correspondance.iloc[0]['refArticle']
+                        nouveau_nom = f"{nouvelle_valeur}-{apres_tiret}{extension}"  # Utilisez l'extension d'origine
+                        nouveau_chemin = os.path.join(dossier_images, nouveau_nom)
+                        
+                        # Gestion du conflit de nom de fichier
+                        counter = 1
+                        while os.path.exists(nouveau_chemin):
+                            nouveau_nom = f"{nouvelle_valeur}-{apres_tiret}_{counter}{extension}"
                             nouveau_chemin = os.path.join(dossier_images, nouveau_nom)
+                            counter += 1
+                        # Renommez le fichier
+                        os.rename(chemin_image, nouveau_chemin)
 
-                            # Renommez le fichier
-                            os.rename(chemin_image, nouveau_chemin)
-
-                            log_message = f"Le fichier {fichier_image} a été renommé en {nouveau_nom}\n"
-                            logs_text.insert(tk.END, log_message)
-                            print(log_message)
-                        else:
-                            log_message = f'Aucune correspondance pour {avant_tiret} !\n'
-                            logs_text.insert(tk.END, log_message)
-                            print(log_message)
+                        log_message = f"Le fichier {fichier_image} a été renommé en {nouveau_nom}\n"
+                        logs_text.insert(tk.END, log_message)
+                        print(log_message)
                     else:
-                        # Si le fichier ne contient pas de tiret, renommez-le en utilisant la valeur dans la colonne 'refFournisseur' et ajoutez les tirets
-                        correspondance = df_excel[df_excel['refFournisseur'] == nom_fichier_sans_extension]
-                        if not correspondance.empty:
-                            nouvelle_valeur = correspondance.iloc[0]['refArticle']
-                            nouveau_nom = f"{nouvelle_valeur}{extension}"  # Utilisez l'extension d'origine
+                        log_message = f'Aucune correspondance pour {avant_tiret} !\n'
+                        logs_text.insert(tk.END, log_message)
+                        print(log_message)
+                else:
+                    # Si le fichier ne contient pas de tiret, renommez-le en utilisant la valeur dans la colonne 'refFournisseur' et ajoutez les tirets
+                    correspondance = df_excel[df_excel['refFournisseur'] == nom_fichier_sans_extension]
+                    if not correspondance.empty:
+                        nouvelle_valeur = correspondance.iloc[0]['refArticle']
+                        nouveau_nom = f"{nouvelle_valeur}{extension}"  # Utilisez l'extension d'origine
+                        nouveau_chemin = os.path.join(dossier_images, nouveau_nom)
+
+                        # Gestion du conflit de nom de fichier
+                        counter = 1
+                        while os.path.exists(nouveau_chemin):
+                            nouveau_nom = f"{nouvelle_valeur}_{counter}{extension}"
                             nouveau_chemin = os.path.join(dossier_images, nouveau_nom)
+                            counter += 1
+                        # Renommez le fichier
+                        os.rename(chemin_image, nouveau_chemin)
 
-                            # Renommez le fichier
-                            os.rename(chemin_image, nouveau_chemin)
-
-                            log_message = f"Le fichier {fichier_image} a été renommé en {nouveau_nom}\n"
-                            logs_text.insert(tk.END, log_message)
-                            print(log_message)
-                        else:
-                            log_message = f'Aucune correspondance pour {nom_fichier_sans_extension} !\n'
-                            logs_text.insert(tk.END, log_message)
-                            print(log_message)
+                        log_message = f"Le fichier {fichier_image} a été renommé en {nouveau_nom}\n"
+                        logs_text.insert(tk.END, log_message)
+                        print(log_message)
+                    else:
+                        log_message = f'Aucune correspondance pour {nom_fichier_sans_extension} !\n'
+                        logs_text.insert(tk.END, log_message)
+                        print(log_message)
 
             messagebox.showinfo("Opération terminée", "Le renommage des fichiers est terminé avec succès!")
 
@@ -124,10 +134,6 @@ fenetre = tk.Tk()
 fenetre.title("Renommer des fichiers")
 fenetre.geometry("600x400")
 
-
-# Maximisez la fenêtre
-# fenetre.attributes('-zoomed', True)
-
 # Cachez la barre de titre et les bordures de la fenêtre
 fenetre.attributes('-fullscreen', True)
 
@@ -135,7 +141,7 @@ fenetre.attributes('-fullscreen', True)
 style = ttk.Style()
 style.theme_use('clam')  # 'clam' est un thème moderne, vous pouvez choisir d'autres thèmes selon vos préférences
 
-# Ajoutez une icône personnalisée à la fenêtre (remplacez "chemin_vers_icone.ico" par le chemin de votre propre icône)
+# Ajoutez une icône personnalisée à la fenêtre
 icone_path = os.path.join(os.path.dirname(__file__), "logo_bernabee.ico")
 fenetre.wm_iconbitmap(icone_path, default=icone_path)
 
@@ -150,12 +156,15 @@ label_image.pack(pady=10)
 bouton_lancer = ttk.Button(fenetre, text="Lancer l'opération", width=20, command=renommer_fichiers)
 bouton_lancer.pack(pady=20)
 
+# Ajoutez des boutons pour fermer et réduire la fenêtre
 fermer_button = tk.Button(fenetre, bg='#FF6961', width=20, height=2, text="Fermer", command=fenetre.destroy)
 fermer_button.pack(pady=20)
+
 def reduire_fenetre():
     fenetre.iconify()
 
 reduire_button = tk.Button(fenetre, bg='#CEC', width=20, height=2, text="Réduire", command=reduire_fenetre)
 reduire_button.pack(pady=20)
+
 # Démarrez la boucle principale Tkinter
 fenetre.mainloop()
